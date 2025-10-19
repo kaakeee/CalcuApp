@@ -1,4 +1,4 @@
-app para ios minimalista con opciones varias
+App para iOS minimalista con opciones varias
 
 
 -Modo blanco/negro
