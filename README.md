@@ -1,7 +1,8 @@
-App para iOS minimalista con opciones varias
+App para iOS minimalista con opciones distintas a la calculadora normal: 
 
 -Modo blanco/negro
 -Modo sonido/silencio (igual no agregue sonidos jeje.)
+-Modo borrar con agitar agregado en configuracion
 
 ![026ACE83-D8EE-4A23-AA16-513783EE4178_4_5005_c](https://github.com/user-attachments/assets/5e5369dc-fc61-4fdf-bb6d-60e1838924ef)
 
