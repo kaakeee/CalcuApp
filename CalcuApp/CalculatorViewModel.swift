@@ -13,13 +13,31 @@ class CalculatorViewModel: ObservableObject {
     @Published var history: [String] = []
 
     func buttonTapped(_ button: CalculatorButton) {
+        // Manejar el estado de error: solo permitir borrar o empezar un nuevo cálculo.
+        if display == "Error" {
+            if button == .clear || button == .delete {
+                display = "0"
+                return
+            }
+            
+            switch button {
+            // Estos botones inician un nuevo cálculo.
+            case .zero, .one, .two, .three, .four, .five, .six, .seven, .eight, .nine, .leftParen, .decimal:
+                display = button.title
+                return
+            // Los demás botones no hacen nada en estado de error.
+            default:
+                return
+            }
+        }
+
         switch button {
         case .clear:
             display = "0"
         case .equals:
             calculate()
         case .decimal:
-            // Prevent adding multiple decimals in the same number component.
+            // Prevenir múltiples puntos decimales en el mismo número.
             let lastComponent = display.components(separatedBy: CharacterSet(charactersIn: "+-×÷()")).last ?? ""
             if !lastComponent.contains(".") {
                 display += button.title
@@ -30,9 +48,28 @@ class CalculatorViewModel: ObservableObject {
             } else {
                 display = "0"
             }
-        case .add, .subtract, .multiply, .divide, .leftParen, .rightParen, .zero, .one, .two, .three, .four, .five, .six, .seven, .eight, .nine:
-            if display == "0" && !isOperator(button) {
-                display = button.title
+        
+        case .add, .subtract, .multiply, .divide:
+            guard let lastChar = display.last else { return }
+
+            // No permitir un operador justo después de un paréntesis de apertura (excepto para números negativos).
+            if lastChar == "(" && button != .subtract {
+                return
+            }
+            
+            // Si el último carácter ya es un operador, reemplazarlo.
+            if isOperator(character: lastChar) {
+                display.removeLast()
+            }
+            
+            display += button.title
+            
+        case .leftParen, .rightParen, .zero, .one, .two, .three, .four, .five, .six, .seven, .eight, .nine:
+            if display == "0" {
+                // No permitir que la expresión empiece con ')'
+                if button != .rightParen {
+                    display = button.title
+                }
             } else {
                 display += button.title
             }
@@ -48,26 +85,31 @@ class CalculatorViewModel: ObservableObject {
         }
     }
     
+    // Nueva función auxiliar para comprobar si un carácter es un operador.
+    private func isOperator(character: Character) -> Bool {
+        return ["+", "-", "×", "÷"].contains(character)
+    }
+    
     private func calculate() {
         let originalExpression = display
-        // NSExpression doesn't understand '×' and '÷', so we replace them.
+        // NSExpression no entiende '×' y '÷', así que los reemplazamos.
         let expressionToEvaluate = originalExpression
             .replacingOccurrences(of: "×", with: "*")
             .replacingOccurrences(of: "÷", with: "/")
-            // Ensure the expression is not empty or just an operator to avoid crashes
+            // Asegurarse de que la expresión no esté vacía o sea solo un operador para evitar fallos.
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !expressionToEvaluate.isEmpty else {
             return
         }
         
-        // Use NSExpression to evaluate the string.
+        // Usar NSExpression para evaluar la cadena.
         let expression = NSExpression(format: expressionToEvaluate)
 
         do {
             if let result = expression.expressionValue(with: nil, context: nil) as? Double {
                 let resultString: String
-                // Format the result to remove trailing .0 for whole numbers.
+                // Formatear el resultado para quitar el .0 en números enteros.
                 if result.truncatingRemainder(dividingBy: 1) == 0 {
                     resultString = String(format: "%.0f", result)
                 } else {
