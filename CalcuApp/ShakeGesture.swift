@@ -2,7 +2,7 @@
 //  ShakeGesture.swift
 //  CalcuApp
 //
-//  Created by Ramiro Nehuen Sanabria on 18/10/2025.
+//  Created by Ramiro Nehuen Sanabria on 20/10/2025.
 //
 
 import SwiftUI
@@ -25,12 +25,19 @@ extension UIWindow {
 // Un modificador de vista que detecta la sacudida y ejecuta una acción.
 struct DeviceShakeViewModifier: ViewModifier {
     let action: () -> Void
+    // Leemos la configuración del usuario para saber si la función está activada.
+    @AppStorage("shakeToClearEnabled") private var shakeToClearEnabled: Bool = true
 
     func body(content: Content) -> some View {
         content
-            .onAppear()
             .onReceive(NotificationCenter.default.publisher(for: UIDevice.deviceDidShakeNotification)) { _ in
-                action()
+                // Solo ejecutamos la acción si la configuración está activada.
+                if shakeToClearEnabled {
+                    // Generamos una vibración para dar feedback al usuario.
+                    let generator = UIImpactFeedbackGenerator(style: .medium)
+                    generator.impactOccurred()
+                    action()
+                }
             }
     }
 }

@@ -19,6 +19,7 @@ struct SettingsView: View {
     // @AppStorage guarda y lee valores de UserDefaults automáticamente.
     // Es perfecto para persistir configuraciones de usuario.
     @AppStorage("soundEnabled") private var soundEnabled: Bool = true
+    @AppStorage("shakeToClearEnabled") private var shakeToClearEnabled: Bool = true
     @AppStorage("colorScheme") private var colorScheme: AppColorScheme = .dark
     
     @Environment(\.dismiss) var dismiss
@@ -31,6 +32,11 @@ struct SettingsView: View {
                     Section(header: Text("Sonido")) {
                         Toggle("Sonido de teclas", isOn: $soundEnabled)
                     }
+                    
+                    Section(header: Text("Gestos")) {
+                        Toggle("Agitar para borrar todo", isOn: $shakeToClearEnabled)
+                    }
+
                     Section(header: Text("Apariencia")) {
                         Picker("Tema", selection: $colorScheme) {
                             ForEach(AppColorScheme.allCases) { scheme in
@@ -56,4 +62,3 @@ struct SettingsView: View {
         }
     }
 }
-

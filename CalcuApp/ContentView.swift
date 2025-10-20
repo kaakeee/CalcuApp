@@ -111,6 +111,11 @@ struct ContentView: View {
                 .toolbarColorScheme(colorScheme == .dark ? .dark : .light, for: .navigationBar)
             }
         }
+        .onShake {
+            // Al agitar, borramos la pantalla (AC) y el historial.
+            viewModel.buttonTapped(.clear)
+            viewModel.clearHistory()
+        }
     }
 }
 
