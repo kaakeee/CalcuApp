@@ -21,6 +21,7 @@ struct SettingsView: View {
     @AppStorage("soundEnabled") private var soundEnabled: Bool = true
     @AppStorage("shakeToClearEnabled") private var shakeToClearEnabled: Bool = true
     @AppStorage("colorScheme") private var colorScheme: AppColorScheme = .dark
+    @AppStorage("keyboardStyle") private var keyboardStyle: KeyboardStyle = .classic
     
     @Environment(\.dismiss) var dismiss
 
@@ -44,6 +45,19 @@ struct SettingsView: View {
                     }
                     .pickerStyle(.segmented)
                 }
+                
+                Section(header: Text("Estilo teclado")) {
+                    Picker("Estilo de teclado", selection: $keyboardStyle) {
+                        ForEach(KeyboardStyle.allCases) { style in
+                            Text(style.rawValue).tag(style)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    Text(keyboardStyle == .classic ? "Modo clásico: El porcentaje funciona normalmente." : "Modo rápido: El botón % también ejecuta '=', funcion borrar y AC separadas, funcion +/- incorporada.")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                }
+                
                 Section {
                     Link("Acerca del creador", destination: URL(string: "https://ramirosanabria.dev")!)
                 }
@@ -57,6 +71,7 @@ struct SettingsView: View {
                         soundEnabled = true
                         shakeToClearEnabled = true
                         colorScheme = .dark
+                        keyboardStyle = .classic
                     }
                 }
                 

@@ -7,10 +7,19 @@
 
 import Foundation
 import Combine
+import SwiftUI
+
+enum KeyboardStyle: String, CaseIterable, Identifiable {
+    case classic = "Clásico"
+    case fast = "Rápido"
+    var id: String { self.rawValue }
+}
 
 class CalculatorViewModel: ObservableObject {
     @Published var display = "0"
     @Published var history: [String] = []
+    
+    @AppStorage("keyboardStyle") var keyboardStyle: KeyboardStyle = .classic
 
     func buttonTapped(_ button: CalculatorButton) {
         // Manejar el estado de error: solo permitir borrar o empezar un nuevo cálculo.
@@ -22,7 +31,7 @@ class CalculatorViewModel: ObservableObject {
             
             switch button {
             // Estos botones inician un nuevo cálculo.
-            case .zero, .one, .two, .three, .four, .five, .six, .seven, .eight, .nine, .leftParen, .decimal:
+            case .zero, .one, .two, .three, .four, .five, .six, .seven, .eight, .nine, .leftParen, .decimal, .plusMinus:
                 display = button.title
                 return
             // Los demás botones no hacen nada en estado de error.
@@ -36,8 +45,13 @@ class CalculatorViewModel: ObservableObject {
             display = "0"
         case .equals:
             calculate()
+        case .plusMinus:
+            handlePlusMinus()
         case .percent: // <-- Añadido caso para el porcentaje
             handlePercent()
+            if keyboardStyle == .fast {
+                calculate()
+            }
         case .decimal:
             // Prevenir múltiples puntos decimales en el mismo número.
             let lastComponent = display.components(separatedBy: CharacterSet(charactersIn: "+-×÷()")).last ?? ""
@@ -126,6 +140,56 @@ class CalculatorViewModel: ObservableObject {
                 display.replaceSubrange(range, with: resultString)
             }
         }
+    }
+    
+    private func handlePlusMinus() {
+        if display == "0" {
+            return
+        }
+
+        // Use a regular expression to find the last sequence of digits (and optional decimal) in the string.
+        guard let lastNumberRange = display.range(of: "\\d+(\\.\\d+)?", options: [.regularExpression, .backwards]) else {
+            return
+        }
+
+        // We have the range of the digits of the last number. e.g. for "-123", it's the range for "123".
+        let charIndexBeforeNumber = lastNumberRange.lowerBound
+        
+        // Check if the number is already negative.
+        if charIndexBeforeNumber > display.startIndex {
+            let potentialSignIndex = display.index(before: charIndexBeforeNumber)
+            if display[potentialSignIndex] == "-" {
+                // It is a minus sign. Is it a negation or subtraction?
+                
+                // If it's at the very beginning, it's negation.
+                if potentialSignIndex == display.startIndex {
+                    display.remove(at: potentialSignIndex) // e.g., "-123" -> "123"
+                    return
+                }
+                
+                // If it's preceded by an operator or '(', it's negation.
+                let charBeforeSignIndex = display.index(before: potentialSignIndex)
+                if ["+", "×", "÷", "("].contains(display[charBeforeSignIndex]) {
+                    display.remove(at: potentialSignIndex) // e.g., "5*-123" -> "5*123"
+                    return
+                }
+            }
+        }
+        
+        // If we're here, the number is positive. Let's make it negative.
+        // Special case: "10-5" should become "10-(-5)" to be a valid expression.
+        if charIndexBeforeNumber > display.startIndex {
+            let charBeforeIndex = display.index(before: charIndexBeforeNumber)
+            // If the character before the number is a minus (subtraction), wrap the now-negative number in parentheses.
+            if display[charBeforeIndex] == "-" {
+                let number = display[lastNumberRange]
+                display.replaceSubrange(lastNumberRange, with: "(-\(number))")
+                return
+            }
+        }
+
+        // For all other cases (e.g., "5", "5+5"), just insert a "-" before the number.
+        display.insert("-", at: lastNumberRange.lowerBound)
     }
     
     private func calculate() {

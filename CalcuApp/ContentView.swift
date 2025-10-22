@@ -24,13 +24,25 @@ struct ContentView: View {
     // Obtenemos el esquema de color actual del entorno para adaptar la UI.
     @Environment(\.colorScheme) var colorScheme
 
-    // Definición de la cuadrícula de botones para facilitar el layout.
-    let buttons: [[CalculatorButton]] = [
-        [.leftParen, .rightParen, .percent, .clear, .divide],
-        [.seven, .eight, .nine, .multiply, .subtract],
-        [.four, .five, .six, .add, .equals],
-        [.one, .two, .three, .zero, .decimal]
-    ]
+    // Convertimos la definición de la cuadrícula en una propiedad computada
+    // para que el layout cambie según el estilo de teclado seleccionado.
+    var buttons: [[CalculatorButton]] {
+        if viewModel.keyboardStyle == .fast {
+            return [
+                [.plusMinus, .percent, .delete, .clear, .divide],
+                [.seven, .eight, .nine, .multiply, .subtract],
+                [.four, .five, .six, .add, .equals],
+                [.one, .two, .three, .zero, .decimal]
+            ]
+        } else { // .classic
+            return [
+                [.leftParen, .rightParen, .percent, .clear, .divide],
+                [.seven, .eight, .nine, .multiply, .subtract],
+                [.four, .five, .six, .add, .equals],
+                [.one, .two, .three, .zero, .decimal]
+            ]
+        }
+    }
 
     var body: some View {
         // Usamos NavigationView para tener una barra de título y botones de acción.
@@ -64,8 +76,8 @@ struct ContentView: View {
                         ForEach(buttons, id: \.self) { row in
                             HStack(spacing: 12) {
                                 ForEach(row, id: \.self) { button in
-                                    // Lógica condicional para el botón .clear
-                                    if button == .clear {
+                                    // El botón .clear en modo clásico tiene doble función (toque corto y largo).
+                                    if button == .clear && viewModel.keyboardStyle == .classic {
                                         Button(action: {
                                             // Acción para un TOQUE CORTO: Borrar un carácter (lógica de .delete)
                                             if soundEnabled {
@@ -96,7 +108,7 @@ struct ContentView: View {
                                             self.isPressingClear = isPressing
                                         })
                                     } else {
-                                        // Comportamiento normal para el resto de los botones
+                                        // El resto de botones (incluyendo .clear y .delete en modo rápido) tienen una sola función.
                                         Button(action: {
                                             if soundEnabled {
                                                 UIDevice.current.playInputClick()
