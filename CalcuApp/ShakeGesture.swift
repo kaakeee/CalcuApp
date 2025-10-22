@@ -28,15 +28,21 @@ struct DeviceShakeViewModifier: ViewModifier {
     // Leemos la configuración del usuario para saber si la función está activada.
     @AppStorage("shakeToClearEnabled") private var shakeToClearEnabled: Bool = true
 
+    // Guardamos una instancia del generador para no tener que crearlo cada vez.
+    @State private var feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
+
     func body(content: Content) -> some View {
         content
+            .onAppear(perform: feedbackGenerator.prepare) // Preparamos el generador cuando la vista aparece para reducir la latencia.
             .onReceive(NotificationCenter.default.publisher(for: UIDevice.deviceDidShakeNotification)) { _ in
                 // Solo ejecutamos la acción si la configuración está activada.
                 if shakeToClearEnabled {
-                    // Generamos una vibración para dar feedback al usuario.
-                    let generator = UIImpactFeedbackGenerator(style: .medium)
-                    generator.impactOccurred()
-                    action()
+                    // Nos aseguramos de que se ejecute en el hilo principal, que es una buena práctica para el feedback háptico y las actualizaciones de la interfaz.
+                    DispatchQueue.main.async {
+                        // Generamos una vibración para dar feedback al usuario.
+                        self.feedbackGenerator.impactOccurred()
+                        action()
+                    }
                 }
             }
     }

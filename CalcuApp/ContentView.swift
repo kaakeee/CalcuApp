@@ -13,6 +13,9 @@ struct ContentView: View {
     @StateObject private var viewModel = CalculatorViewModel()
     @State private var showingHistory = false
     @State private var showingSettings = false
+    
+    // Variable de estado para controlar la pulsación del botón de borrar.
+    @State private var isPressingClear = false
 
     // Leemos la configuración de sonido guardada por el usuario.
     @AppStorage("soundEnabled") private var soundEnabled: Bool = true
@@ -21,10 +24,10 @@ struct ContentView: View {
 
     // Definición de la cuadrícula de botones para facilitar el layout.
     let buttons: [[CalculatorButton]] = [
-        [.leftParen, .rightParen, .delete, .clear, .divide],
+        [.leftParen, .rightParen, .percent, .clear, .divide],
         [.seven, .eight, .nine, .multiply, .subtract],
         [.four, .five, .six, .add, .equals],
-        [.one, .two, .three, .decimal, .zero]
+        [.one, .two, .three, .zero, .decimal]
     ]
 
     var body: some View {
@@ -59,24 +62,51 @@ struct ContentView: View {
                         ForEach(buttons, id: \.self) { row in
                             HStack(spacing: 12) {
                                 ForEach(row, id: \.self) { button in
-                                    Button(action: {
-                                        // Si los sonidos están activados, reproducimos un click.
-                                        if soundEnabled {
-                                            UIDevice.current.playInputClick()
+                                    // **INICIO DEL CAMBIO:** Lógica condicional para el botón .clear
+                                    if button == .clear {
+                                        Button(action: {
+                                            // Acción para un TOQUE CORTO: Borrar un carácter (lógica de .delete)
+                                            if soundEnabled {
+                                                UIDevice.current.playInputClick()
+                                            }
+                                            viewModel.buttonTapped(.delete)
+                                        }) {
+                                            // El texto cambia si se está presionando el botón
+                                            Text(isPressingClear ? "AC" : "←")
+                                                .font(.system(size: 32))
+                                                .frame(width: buttonSize, height: buttonSize)
+                                                .background(button.backgroundColor(for: colorScheme))
+                                                .foregroundColor(button.foregroundColor(for: colorScheme))
+                                                .cornerRadius(buttonSize / 2)
                                         }
-                                        viewModel.buttonTapped(button)
-                                    }) {
-                                        Text(button.title)
-                                            .font(.system(size: 32))
-                                            .frame(
-                                                width: buttonSize,
-                                                height: buttonSize
-                                            )
-                                            // Usamos las nuevas funciones para obtener colores adaptables.
-                                            .background(button.backgroundColor(for: colorScheme))
-                                            .foregroundColor(button.foregroundColor(for: colorScheme))
-                                            .cornerRadius(buttonSize / 2)
+                                        // Gesto para la PULSACIÓN LARGA
+                                        .onLongPressGesture(minimumDuration: 0.5, perform: {
+                                            // Acción al completarse la pulsación larga: Borrar todo (lógica de .clear)
+                                            if soundEnabled {
+                                                UIDevice.current.playInputClick()
+                                            }
+                                            viewModel.buttonTapped(.clear)
+                                        }, onPressingChanged: { isPressing in
+                                            // Actualiza el estado para cambiar el texto del botón
+                                            self.isPressingClear = isPressing
+                                        })
+                                    } else {
+                                        // Comportamiento normal para el resto de los botones
+                                        Button(action: {
+                                            if soundEnabled {
+                                                UIDevice.current.playInputClick()
+                                            }
+                                            viewModel.buttonTapped(button)
+                                        }) {
+                                            Text(button.title)
+                                                .font(.system(size: 32))
+                                                .frame(width: buttonSize, height: buttonSize)
+                                                .background(button.backgroundColor(for: colorScheme))
+                                                .foregroundColor(button.foregroundColor(for: colorScheme))
+                                                .cornerRadius(buttonSize / 2)
+                                        }
                                     }
+                                    // **FIN DEL CAMBIO**
                                 }
                             }
                         }

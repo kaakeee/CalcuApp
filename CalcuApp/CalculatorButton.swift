@@ -27,6 +27,7 @@ enum CalculatorButton: String, CaseIterable, Hashable {
     case multiply = "×"
     case divide = "÷"
 
+    case percent = "%" // <-- Botón añadido
     case leftParen = "("
     case rightParen = ")"
     case clear = "AC"
@@ -44,7 +45,7 @@ enum CalculatorButton: String, CaseIterable, Hashable {
     // Convertimos backgroundColor en una función que reacciona al tema actual.
     func backgroundColor(for colorScheme: ColorScheme) -> Color {
         switch self {
-        case .zero, .one, .two, .three, .four, .five, .six, .seven, .eight, .nine, .decimal, .leftParen, .rightParen, .delete:
+        case .zero, .one, .two, .three, .four, .five, .six, .seven, .eight, .nine, .decimal, .leftParen, .rightParen, .delete, .percent: // <-- Añadido .percent
             // Usamos un color para el modo oscuro y otro para el modo claro.
             return colorScheme == .dark ? Color(.darkGray) : Color(red: 0.92, green: 0.92, blue: 0.92)
         case .clear:
