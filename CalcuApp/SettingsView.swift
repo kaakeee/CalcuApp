@@ -25,37 +25,44 @@ struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
-        ZStack {
-            Color.clear.background(.ultraThinMaterial)
-            NavigationView {
-                Form {
-                    Section(header: Text("Sonido")) {
-                        Toggle("Sonido de teclas", isOn: $soundEnabled)
-                    }
-                    
-                    Section(header: Text("Gestos")) {
-                        Toggle("Agitar para borrar todo", isOn: $shakeToClearEnabled)
-                    }
+        // Se ha eliminado el ZStack y el fondo .ultraThinMaterial para evitar el doble efecto visual.
+        NavigationView {
+            Form {
+                Section(header: Text("Sonido")) {
+                    Toggle("Sonido de teclas", isOn: $soundEnabled)
+                }
+                
+                Section(header: Text("Gestos")) {
+                    Toggle("Agitar para borrar todo", isOn: $shakeToClearEnabled)
+                }
 
-                    Section(header: Text("Apariencia")) {
-                        Picker("Tema", selection: $colorScheme) {
-                            ForEach(AppColorScheme.allCases) { scheme in
-                                Text(scheme.rawValue).tag(scheme)
-                            }
+                Section(header: Text("Apariencia")) {
+                    Picker("Tema", selection: $colorScheme) {
+                        ForEach(AppColorScheme.allCases) { scheme in
+                            Text(scheme.rawValue).tag(scheme)
                         }
-                        .pickerStyle(.segmented)
                     }
-                    Section {
-                        Link("Acerca del creador", destination: URL(string: "https://ramirosanabria.dev")!)
+                    .pickerStyle(.segmented)
+                }
+                Section {
+                    Link("Acerca del creador", destination: URL(string: "https://ramirosanabria.dev")!)
+                }
+            }
+            .navigationTitle("Configuración")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                // **NUEVO:** Botón para restablecer la configuración a los valores por defecto.
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Restablecer") {
+                        soundEnabled = true
+                        shakeToClearEnabled = true
+                        colorScheme = .dark
                     }
                 }
-                .navigationTitle("Configuración")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Hecho") {
-                            dismiss()
-                        }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Hecho") {
+                        dismiss()
                     }
                 }
             }

@@ -16,6 +16,8 @@ struct ContentView: View {
     
     // Variable de estado para controlar la pulsación del botón de borrar.
     @State private var isPressingClear = false
+    // **NUEVO:** Generador de feedback háptico.
+    @State private var feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
 
     // Leemos la configuración de sonido guardada por el usuario.
     @AppStorage("soundEnabled") private var soundEnabled: Bool = true
@@ -62,7 +64,7 @@ struct ContentView: View {
                         ForEach(buttons, id: \.self) { row in
                             HStack(spacing: 12) {
                                 ForEach(row, id: \.self) { button in
-                                    // **INICIO DEL CAMBIO:** Lógica condicional para el botón .clear
+                                    // Lógica condicional para el botón .clear
                                     if button == .clear {
                                         Button(action: {
                                             // Acción para un TOQUE CORTO: Borrar un carácter (lógica de .delete)
@@ -81,11 +83,17 @@ struct ContentView: View {
                                         }
                                         // Gesto para la PULSACIÓN LARGA
                                         .onLongPressGesture(minimumDuration: 0.5, perform: {
+                                            // **INICIO DEL CAMBIO**
                                             // Acción al completarse la pulsación larga: Borrar todo (lógica de .clear)
                                             if soundEnabled {
                                                 UIDevice.current.playInputClick()
                                             }
+                                            // 1. Generamos la vibración.
+                                            feedbackGenerator.impactOccurred()
+                                            // 2. Borramos la pantalla y el historial.
                                             viewModel.buttonTapped(.clear)
+                                            viewModel.clearHistory()
+                                            // **FIN DEL CAMBIO**
                                         }, onPressingChanged: { isPressing in
                                             // Actualiza el estado para cambiar el texto del botón
                                             self.isPressingClear = isPressing
@@ -106,7 +114,6 @@ struct ContentView: View {
                                                 .cornerRadius(buttonSize / 2)
                                         }
                                     }
-                                    // **FIN DEL CAMBIO**
                                 }
                             }
                         }
@@ -142,9 +149,15 @@ struct ContentView: View {
             }
         }
         .onShake {
+            // **MEJORA:** Añadida vibración al agitar.
+            feedbackGenerator.impactOccurred()
             // Al agitar, borramos la pantalla (AC) y el historial.
             viewModel.buttonTapped(.clear)
             viewModel.clearHistory()
+        }
+        .onAppear {
+            // **NUEVO:** Preparamos el generador de vibración para reducir latencia.
+            feedbackGenerator.prepare()
         }
     }
 }

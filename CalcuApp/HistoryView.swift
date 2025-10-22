@@ -61,13 +61,13 @@ struct HistoryView: View {
                         viewModel.clearHistory()
                     }
                     .disabled(viewModel.history.isEmpty)
-                    .buttonStyle(GlassButtonStyle()) // <-- Aplicamos el nuevo estilo
+                    // Se ha eliminado .buttonStyle(GlassButtonStyle())
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Hecho") {
                         dismiss()
                     }
-                    .buttonStyle(GlassButtonStyle()) // <-- Aplicamos el nuevo estilo
+                    // Se ha eliminado .buttonStyle(GlassButtonStyle())
                 }
             }
         }
