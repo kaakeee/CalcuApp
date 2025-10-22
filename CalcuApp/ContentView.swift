@@ -16,7 +16,7 @@ struct ContentView: View {
     
     // Variable de estado para controlar la pulsación del botón de borrar.
     @State private var isPressingClear = false
-    // **NUEVO:** Generador de feedback háptico.
+    // Generador de feedback háptico.
     @State private var feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
 
     // Leemos la configuración de sonido guardada por el usuario.
@@ -83,17 +83,14 @@ struct ContentView: View {
                                         }
                                         // Gesto para la PULSACIÓN LARGA
                                         .onLongPressGesture(minimumDuration: 0.5, perform: {
-                                            // **INICIO DEL CAMBIO**
                                             // Acción al completarse la pulsación larga: Borrar todo (lógica de .clear)
                                             if soundEnabled {
                                                 UIDevice.current.playInputClick()
                                             }
                                             // 1. Generamos la vibración.
                                             feedbackGenerator.impactOccurred()
-                                            // 2. Borramos la pantalla y el historial.
+                                            // 2. Borramos solo la pantalla.
                                             viewModel.buttonTapped(.clear)
-                                            viewModel.clearHistory()
-                                            // **FIN DEL CAMBIO**
                                         }, onPressingChanged: { isPressing in
                                             // Actualiza el estado para cambiar el texto del botón
                                             self.isPressingClear = isPressing
@@ -108,6 +105,11 @@ struct ContentView: View {
                                         }) {
                                             Text(button.title)
                                                 .font(.system(size: 32))
+                                                // **INICIO DEL CAMBIO**
+                                                // Añade un desplazamiento para centrar ópticamente los paréntesis.
+                                                // Mueve "(" a la izquierda y ")" a la derecha.
+                                                .offset(x: button == .leftParen ? -2.5 : (button == .rightParen ? 2.5 : 0))
+                                                // **FIN DEL CAMBIO**
                                                 .frame(width: buttonSize, height: buttonSize)
                                                 .background(button.backgroundColor(for: colorScheme))
                                                 .foregroundColor(button.foregroundColor(for: colorScheme))
@@ -149,14 +151,13 @@ struct ContentView: View {
             }
         }
         .onShake {
-            // **MEJORA:** Añadida vibración al agitar.
-            feedbackGenerator.impactOccurred()
             // Al agitar, borramos la pantalla (AC) y el historial.
+            feedbackGenerator.impactOccurred()
             viewModel.buttonTapped(.clear)
             viewModel.clearHistory()
         }
         .onAppear {
-            // **NUEVO:** Preparamos el generador de vibración para reducir latencia.
+            // Preparamos el generador de vibración para reducir latencia.
             feedbackGenerator.prepare()
         }
     }
